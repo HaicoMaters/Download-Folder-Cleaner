@@ -53,6 +53,18 @@ def map_file_to_category(file, file_map):
         file_map['Others'].append(file)
     return
 
+def get_unique_filename(dst):
+    # if dst already exists, append a number to the filename
+    # e.g., file.txt -> file(1).txt
+
+    base, ext = os.path.splitext(dst)
+    counter = 1
+    new_dst = dst
+    while os.path.exists(new_dst):
+        new_dst = f"{base}({counter}){ext}"
+        counter += 1
+    return new_dst
+
 
 def main():
      # args for folder path to clean (no args = downloads folder)
@@ -77,6 +89,7 @@ def main():
         for file in files:
             src = os.path.join(base_path, file)
             dst = os.path.join(directories[category], file)
+            dst = get_unique_filename(dst)  # ensure no overwriting
             try:
                 os.rename(src, dst)
             except Exception as e:

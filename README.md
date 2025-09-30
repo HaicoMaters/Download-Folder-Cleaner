@@ -38,5 +38,6 @@ Files are sorted into these categories based on their extensions:
 
 - 🔒 Hidden files (those starting with `.`) are ignored.   
 - 📂 New category folders are created automatically if they don’t already exist.  
+- ⚠️ If a file with the same name already exists in the destination folder, the script will automatically rename the file (e.g., `file.txt` → `file(1).txt`) to avoid overwriting.
 
 ---
