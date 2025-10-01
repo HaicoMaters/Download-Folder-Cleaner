@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 
@@ -66,11 +67,9 @@ def get_unique_filename(dst):
     return new_dst
 
 
-def main():
-     # args for folder path to clean (no args = downloads folder)
-    base_path = download_path
-    if args := sys.argv[1:]:
-        base_path = args[0]
+def main(base_path=None):
+    if base_path is None:
+        base_path = download_path
 
     directories = create_directories(base_path)  # create dirs
     files = get_files(base_path)
@@ -100,4 +99,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Clean and organize your Downloads folder.")
+    parser.add_argument('--path', type=str, help='Path to the folder to clean.')
+    args = parser.parse_args()
+
+    main(args.path)
