@@ -1,8 +1,16 @@
 # 📂 Download Folder Cleaner
 
-A lightweight Python script that automatically organizes files in your **Downloads** folder (or any folder you specify and specifically within the root folder not any subfolders) into categories such as **Audio, Video, Documents, Images, Archives, Installers,** and **Others**.  
+A lightweight Python script that automatically organizes files in your **Downloads** folder (or any folder you specify) into logical categories.
 
-## Setup
+##  Features
+
+- **Automatic Categorization**: Sorts files by type into organized folders
+- **Safe Operations**: Never overwrites existing files
+- **Recursive Mode**: Option to clean subfolders
+- **Configurable**: Specify custom folder paths and recursion depth
+- **Hidden File Protection**: Preserves hidden files
+
+##  Setup
 
 1. Clone the repository
 ```bash
@@ -15,51 +23,58 @@ cd Download_Folder_Cleaner
 pip install -r requirements.txt
 ```
 
-## Usage
+##  Usage
 
-### Clean your Downloads folder
+### Basic Operation Cleaning Your Downloads Folder
 ```bash
 python Folder_Cleaner.py
 ```
 
-### Clean a specific folder
-Provide the folder path as an argument:
+### Advanced Options
 ```bash
+# Clean a specific folder
 python Folder_Cleaner.py --path "path/to/your/folder"
+
+# Clean folders recursively (infinite depth)
+python Folder_Cleaner.py --recursive
+
+# Clean with specific recursion depth
+python Folder_Cleaner.py --recursive --depth 2  # Only process subdirectories up to 2 levels deep
+python Folder_Cleaner.py --recursive --depth 0  # No recursion (same as without --recursive)
+python Folder_Cleaner.py --recursive --depth -1 # Infinite recursion (default)
 ```
----
 
-## Testing
+##  Testing
 
-Run the tests using pytest:
+Run the test suite:
 ```bash
 pytest Tests/Folder_Cleaner_Tests.py -v
 ```
 
-The tests verify:
+Tests cover:
 - File categorization logic
 - File movement operations
 - Handling of duplicate files
 - Path validation
+- Recursive operations
 
-## Categories
+##  Categories
 
-Files are sorted into these categories based on their extensions:
+Files are automatically sorted into these categories:
 
-- **Audio**: `.mp3`, `.wav`, `.flac`, `.aac`, `.ogg`, `.wma`, `.m4a`  
-- **Video**: `.mp4`, `.mkv`, `.avi`, `.mov`, `.wmv`, `.flv`, `.webm`, `.mpeg`  
-- **Documents**: `.pdf`, `.docx`, `.txt`, `.xlsx`, `.pptx`, `.odt`, `.rtf`  
-- **Images**: `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.svg`  
-- **Archives**: `.zip`, `.rar`, `.tar`, `.gz`, `.7z`  
-- **Installers**: `.exe`, `.msi`, `.dmg`, `.pkg`  
-- **Others**: Any file not in the above categories  
+| Category    | Extensions |
+|------------|------------|
+| Audio      | `.mp3`, `.wav`, `.flac`, `.aac`, `.ogg`, `.wma`, `.m4a` |
+| Video      | `.mp4`, `.mkv`, `.avi`, `.mov`, `.wmv`, `.flv`, `.webm` |
+| Documents  | `.pdf`, `.docx`, `.txt`, `.xlsx`, `.pptx`, `.odt`, `.rtf` |
+| Images     | `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tiff`, `.svg` |
+| Archives   | `.zip`, `.rar`, `.tar`, `.gz`, `.7z` |
+| Installers | `.exe`, `.msi`, `.dmg`, `.pkg` |
+| Others     | Any unmatched extensions |
 
----
+##  Notes
 
-## Notes
-
-- Hidden files (those starting with `.`) are ignored.   
--  New category folders are created automatically if they don’t already exist.  
--  If a file with the same name already exists in the destination folder, the script will automatically rename the file (e.g., `file.txt` → `file(1).txt`) to avoid overwriting.
-
----
+- Hidden files (starting with `.`) are preserved in their original location
+- Files are never overwritten; duplicates are renamed automatically
+- New category folders are created as needed
+- Only processes files in the specified folder by default

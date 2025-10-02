@@ -1,6 +1,18 @@
+"""
+Download Folder Cleaner - A utility to organize files into categorized directories.
+
+This module provides functionality to automatically sort files into appropriate
+directories based on their file extensions. It can handle various file types
+including audio, video, documents, images, archives, and installers.
+
+Usage:
+    python Folder_Cleaner.py [--path PATH] [--recursive] [recursionDepth]
+"""
+
 import argparse
 import os
 import sys
+from typing import Dict, List, Optional
 
 # maps of file extensions to categories
 Audio_Extensions = {'.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma', '.m4a'}
@@ -13,7 +25,16 @@ Installer_Extensions = {'.exe', '.msi', '.dmg', '.pkg'}
 
 download_path = os.path.join(os.path.expanduser("~"), "Downloads")
 
-def create_directories(base_path):
+def create_directories(base_path: str) -> Dict[str, str]:
+    """
+    Create category directories if they don't exist.
+
+    Args:
+        base_path: The root path where directories should be created
+
+    Returns:
+        Dict mapping category names to their full directory paths
+    """
     directories = {
         'Audio': os.path.join(base_path, 'Audio'),
         'Video': os.path.join(base_path, 'Video'),
@@ -29,11 +50,30 @@ def create_directories(base_path):
 
     return directories
 
-def get_files(base_path):
+def get_files(base_path: str) -> List[str]:
+    """
+    Get list of files in the specified directory (excluding directories).
+
+    Args:
+        base_path: Directory path to scan for files
+
+    Returns:
+        List of filenames found in the directory
+    """
     # skip folders and get a list of each file name in the base path (skipping any folders)
     return [file for file in os.listdir(base_path) if os.path.isfile(os.path.join(base_path, file))]
 
-def map_file_to_category(file, file_map):
+def map_file_to_category(file: str, file_map: Dict[str, List[str]]) -> None:
+    """
+    Map a file to its appropriate category based on extension.
+
+    Args:
+        file: Name of the file to categorize
+        file_map: Dictionary to store categorized files
+
+    Note:
+        Hidden files (starting with '.') are ignored
+    """
     if (file.startswith('.')): # skip hidden files
         return
     
@@ -54,7 +94,16 @@ def map_file_to_category(file, file_map):
         file_map['Others'].append(file)
     return
 
-def get_unique_filename(dst):
+def get_unique_filename(dst: str) -> str:
+    """
+    Generate a unique filename by appending a number if file exists.
+
+    Args:
+        dst: Destination path to check
+
+    Returns:
+        Modified path that doesn't conflict with existing files
+    """
     # if dst already exists, append a number to the filename
     # e.g., file.txt -> file(1).txt
 
@@ -67,7 +116,15 @@ def get_unique_filename(dst):
     return new_dst
 
 
-def main(base_path=None):
+def main(base_path: Optional[str] = None, recursive: bool = False, recursionDepth: int = -1) -> None:
+    """
+    Main function to organize files into categories.
+
+    Args:
+        base_path: Directory to organize (defaults to user's Downloads)
+        recursive: Whether to process subdirectories
+        recursionDepth: How deep to recurse (-1 for infinite)
+    """
     if base_path is None:
         base_path = download_path
 
@@ -93,6 +150,12 @@ def main(base_path=None):
                 os.rename(src, dst)
             except Exception as e:
                 print(f"Error moving {file}: {e}")
+    
+    if recursive and (recursionDepth != 0): # if recursionDepth is -1, recurse infinitely
+        for item in os.listdir(base_path):
+            item_path = os.path.join(base_path, item)
+            if os.path.isdir(item_path) and not item.endswith(tuple(directories.keys())): # avoid recursing into the created directories
+                main(item_path, recursive=True, recursionDepth = recursionDepth - 1)
 
     print("Finished Cleaning!")
     
@@ -100,7 +163,10 @@ def main(base_path=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Clean and organize your Downloads folder.")
-    parser.add_argument('--path', type=str, help='Path to the folder to clean.')
+    parser.add_argument('--path', type=str, help='Path to the folder to clean')
+    parser.add_argument('--recursive', action='store_true', help='Clean subdirectories recursively')
+    parser.add_argument('--depth', type=int, default=-1, 
+                       help='Maximum recursion depth (-1 for infinite, 0 for no recursion, 1 for immediate subdirectories only)')
     args = parser.parse_args()
 
-    main(args.path)
+    main(args.path, args.recursive, args.depth)
