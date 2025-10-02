@@ -78,3 +78,21 @@ Files are automatically sorted into these categories:
 - Files are never overwritten; duplicates are renamed automatically
 - New category folders are created as needed
 - Only processes files in the specified folder by default
+
+## ⚠️ Important Safety Precautions
+
+- **DO NOT** use on project directories or structured folders where file organization matters
+- **Be extra careful** with recursive mode as it will reorganize all subdirectories
+- **Avoid using** on:
+  - Software development projects
+  - Git repositories
+  - Application folders
+  - System directories
+  - Photo albums with specific organization
+- **Recommended uses**:
+  - Downloads folder
+  - Temporary file dumps
+  - Unorganized media collections
+  - Backup folders that need sorting
+
+Always make sure you have backups of important files before running this tool.
