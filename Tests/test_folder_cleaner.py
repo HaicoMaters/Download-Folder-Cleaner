@@ -11,14 +11,14 @@ import sys
 import shutil
 from typing import Generator
 
-# Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import Folder_Cleaner
+from folder_cleaner import create_directories, get_files, map_file_to_category, get_unique_filename, main
+from change_logger_singleton import initialize_logger, get_logger
 
-test_path = os.path.join(os.path.dirname(__file__), 'test_folder')
-test_subfolder = os.path.join(test_path, 'subfolder')
-test_sub_subfolder = os.path.join(test_subfolder, 'sub_subfolder')
+TEST_PATH = os.path.join(os.path.dirname(__file__), 'test_folder')
+TEST_SUBFOLDER = os.path.join(TEST_PATH, 'subfolder')
+TEST_SUB_SUBFOLDER = os.path.join(TEST_SUBFOLDER, 'sub_subfolder')
 
 @pytest.fixture
 def setup_paths() -> Generator[str, None, None]:
@@ -39,9 +39,12 @@ def setup_paths() -> Generator[str, None, None]:
         Regardless of test outcome
     """
     # Create test directory if it doesn't exist
-    os.makedirs(test_path, exist_ok=True)
-    os.makedirs(test_subfolder, exist_ok=True)
-    os.makedirs(test_sub_subfolder, exist_ok=True)
+    os.makedirs(TEST_PATH, exist_ok=True)
+    os.makedirs(TEST_SUBFOLDER, exist_ok=True)
+    os.makedirs(TEST_SUB_SUBFOLDER, exist_ok=True)
+
+    # Initialize logger for tests
+    initialize_logger(TEST_PATH)
 
     # Create test files
     test_files = {
@@ -56,33 +59,39 @@ def setup_paths() -> Generator[str, None, None]:
     }
 
     for filename, content in test_files.items():
-        with open(os.path.join(test_path, filename), 'w') as f:
+        with open(os.path.join(TEST_PATH, filename), 'w') as f:
             f.write(content)
 
     # Create a file in a subfolder to ensure it is ignored
-    with open(os.path.join(test_subfolder, 'subfile.txt'), 'w') as f:
+    with open(os.path.join(TEST_SUBFOLDER, 'subfile.txt'), 'w') as f:
         f.write('subfolder file')
 
     # Create file in sub-subfolder to ensure it is ignored
-    with open(os.path.join(test_sub_subfolder, 'subsubfile.txt'), 'w') as f:
+    with open(os.path.join(TEST_SUB_SUBFOLDER, 'subsubfile.txt'), 'w') as f:
         f.write('sub-subfolder file')
     
     # Create file that will cause a duplicate
-    os.makedirs(os.path.join(test_path, 'Audio'), exist_ok=True)
-    with open(os.path.join(test_path, 'Audio', 'song.mp3'), 'w') as f:
+    os.makedirs(os.path.join(TEST_PATH, 'Audio'), exist_ok=True)
+    with open(os.path.join(TEST_PATH, 'Audio', 'song.mp3'), 'w') as f:
         f.write('existing audio')
 
-    yield test_path
+    yield TEST_PATH
 
     # Cleanup after tests
-    if os.path.exists(test_path):
-        shutil.rmtree(test_path)
+    if os.path.exists(TEST_PATH):
+        shutil.rmtree(TEST_PATH)
+
+    # Remove logs created
+    logFile = get_logger().log_file
+    if os.path.exists(logFile):
+        os.remove(logFile)
 
 #--------------------------------------- Tests for create_directories ----------------------------------------
 
 def test_create_directories(setup_paths):
     """Test the creation of directory structure."""
-    dirs = Folder_Cleaner.create_directories(setup_paths)
+    # setup_paths fixture will already have initialized the logger
+    dirs = create_directories(setup_paths)
     for dir_name in ['Audio', 'Video', 'Documents', 'Images', 'Archives', 'Installers', 'Others']:
         assert os.path.exists(dirs[dir_name])
 
@@ -91,7 +100,7 @@ def test_create_directories(setup_paths):
 def test_get_files(setup_paths):
     """Test retrieval of files from the directory."""
 
-    files = Folder_Cleaner.get_files(setup_paths)
+    files = get_files(setup_paths)
     expected_files = ['song.mp3', 'video.mp4', 'document.pdf', 'image.jpg', 'archive.zip', 
                       'installer.exe', 'unknown.xyz', '.hiddenfile']
     assert sorted(files) == sorted(expected_files)
@@ -107,7 +116,7 @@ def test_map_file_to_category():
                       'archive.zip', 'installer.exe', 'unknown.xyz', '.hiddenfile']
         
     for file in test_files:
-        Folder_Cleaner.map_file_to_category(file, file_map)
+        map_file_to_category(file, file_map)
         
     assert file_map['Audio'] == ['song.mp3']
     assert file_map['Video'] == ['video.mp4']
@@ -121,8 +130,8 @@ def test_map_file_to_category():
 #--------------------------------------- Tests for get_unique_filename ----------------------------------------
 def test_get_unique_filename_nonexistent():
     """Test getting a unique filename when the file does not exist."""
-    test_file = os.path.join(test_path, 'newfile.txt')
-    result = Folder_Cleaner.get_unique_filename(test_file)
+    test_file = os.path.join(TEST_PATH, 'newfile.txt')
+    result = get_unique_filename(test_file)
     assert result == test_file
 
 def test_get_unique_filename_existing(setup_paths):
@@ -132,7 +141,7 @@ def test_get_unique_filename_existing(setup_paths):
     with open(test_file, 'w') as f:
         f.write('original file')
     
-    result = Folder_Cleaner.get_unique_filename(test_file)
+    result = get_unique_filename(test_file)
     assert result == os.path.join(setup_paths, 'duplicate(1).txt')
 
 def test_get_unique_filename_multiple_existing(setup_paths):
@@ -144,13 +153,13 @@ def test_get_unique_filename_multiple_existing(setup_paths):
     with open(os.path.join(setup_paths, 'multiple(1).txt'), 'w') as f:
         f.write('first duplicate')
     
-    result = Folder_Cleaner.get_unique_filename(base_file)
+    result = get_unique_filename(base_file)
     assert result == os.path.join(setup_paths, 'multiple(2).txt')
 
 # --------------------------------------- Tests for main ----------------------------------------
 def test_main_function(setup_paths):
     """Test the main folder cleaning function."""
-    Folder_Cleaner.main(setup_paths)
+    main(setup_paths)
     
     # Check if files are moved to correct directories
     assert os.path.exists(os.path.join(setup_paths, 'Audio', 'song.mp3'))
@@ -171,7 +180,7 @@ def test_main_function(setup_paths):
     assert os.path.exists(os.path.join(setup_paths, 'subfolder', 'subfile.txt'))
     
     # Ensure original files are removed from base path
-    remaining_files = Folder_Cleaner.get_files(setup_paths)
+    remaining_files = get_files(setup_paths)
     assert 'song.mp3' not in remaining_files
     assert 'video.mp4' not in remaining_files
     assert 'document.pdf' not in remaining_files
@@ -194,7 +203,7 @@ def test_main_function(setup_paths):
 # --------------------------------------- Tests for main with recursion ----------------------------------------
 def test_main_function_recursive(setup_paths):
     """Test with infinite recursion (recursionDepth=-1)"""
-    Folder_Cleaner.main(setup_paths, recursive=True, recursionDepth=-1)
+    main(setup_paths, recursive=True, recursionDepth=-1)
 
     # Check base path files
     assert os.path.exists(os.path.join(setup_paths, 'Audio', 'song.mp3'))
@@ -211,7 +220,7 @@ def test_main_function_recursive(setup_paths):
 
 def test_main_function_recursive_limited_depth(setup_paths):
     """Test with recursion depth of 1"""
-    Folder_Cleaner.main(setup_paths, recursive=True, recursionDepth=1)
+    main(setup_paths, recursive=True, recursionDepth=1)
 
     # Check base path files
     assert os.path.exists(os.path.join(setup_paths, 'Audio', 'song.mp3'))

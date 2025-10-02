@@ -14,8 +14,8 @@ A lightweight Python script that automatically organizes files in your **Downloa
 
 1. Clone the repository
 ```bash
-git clone https://github.com/HaicoMaters/Download_Folder_Cleaner.git
-cd Download_Folder_Cleaner
+git clone https://github.com/HaicoMaters/Download-Folder-Cleaner.git
+cd Download-Folder-Cleaner
 ```
 
 2. Install dependencies
@@ -27,28 +27,28 @@ pip install -r requirements.txt
 
 ### Basic Operation Cleaning Your Downloads Folder
 ```bash
-python Folder_Cleaner.py
+python folder_cleaner.py
 ```
 
 ### Advanced Options
 ```bash
 # Clean a specific folder
-python Folder_Cleaner.py --path "path/to/your/folder"
+python folder_cleaner.py --path "path/to/your/folder"
 
 # Clean folders recursively (infinite depth)
-python Folder_Cleaner.py --recursive
+python folder_cleaner.py --recursive
 
 # Clean with specific recursion depth
-python Folder_Cleaner.py --recursive --depth 2  # Only process subdirectories up to 2 levels deep
-python Folder_Cleaner.py --recursive --depth 0  # No recursion (same as without --recursive)
-python Folder_Cleaner.py --recursive --depth -1 # Infinite recursion (default)
+python folder_cleaner.py --recursive --depth 2  # Only process subdirectories up to 2 levels deep
+python folder_cleaner.py --recursive --depth 0  # No recursion (same as without --recursive)
+python folder_cleaner.py --recursive --depth -1 # Infinite recursion (default)
 ```
 
 ##  Testing
 
 Run the test suite:
 ```bash
-pytest Tests/Folder_Cleaner_Tests.py -v
+pytest tests/test_folder_cleaner.py -v
 ```
 
 Tests cover:
@@ -72,12 +72,14 @@ Files are automatically sorted into these categories:
 | Installers | `.exe`, `.msi`, `.dmg`, `.pkg` |
 | Others     | Any unmatched extensions |
 
+
 ##  Notes
 
 - Hidden files (starting with `.`) are preserved in their original location
 - Files are never overwritten; duplicates are renamed automatically
 - New category folders are created as needed
 - Only processes files in the specified folder by default
+- Logs for help with reverting accidental missuse of the tool are stored in `/logs`
 
 ## ⚠️ Important Safety Precautions
 
@@ -96,3 +98,18 @@ Files are automatically sorted into these categories:
   - Backup folders that need sorting
 
 Always make sure you have backups of important files before running this tool.
+
+##  Reverting Changes
+
+To mitigate issues caused with accidental missuse of the tool it logs all file movements and folder creations to a JSON file that can be used to revert changes:
+
+```bash
+# Normal cleanup operation creates a log file
+python folder_cleaner.py --path "your/folder"
+# Output: Changes logged to: json file
+
+# Revert changes using the log file
+python revert_changes.py "Download-Folder-Cleaner/logs/thejsonfile"
+```
+
+**Note**: Keep the log files if you think you might need to revert changes later. File Changes logs are automatically deleted after reverting changes.
